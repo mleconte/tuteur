@@ -1,25 +1,17 @@
-Plugin Moodle développé par le Pole de Ressource Numérique (PRN) de l'Université du Mans.
+Help tutor's action by colorizing new student's response.
 
-Il s'agit d'un clone du rapport d'achèvement, qui colorise 4 activités en fonctions des actions des apprenants et des tuteurs.
-Les 4 activités sont : Devoir, Quizz, Journal, Leçon
-Les règles de colorisations sont :
-+------------+-------------------+-----------------------------+------------------------------+
-|    Couleur |                   |                             |                              |
-|    \       |  Aucune           | Orange                      | Verte                        |
-| Activité   |                   |                             |                              |
-+------------+-------------------+-----------------------------+------------------------------+
-| Devoir     | pas de soumission | Soumission plus récente que | Note ou FeedBack plus récent |
-|            |                   | note ou FeedBack            | que soumission               |
-+------------+-------------------+-----------------------------+------------------------------+
-| Test       | test non réalisé  | Dernière tentative non noté | Dernière tentative noté      |
-+------------+-------------------+-----------------------------+------------------------------+
-| Journal    | Non renseigné     | Ecrit élève plus récent     | Noté ou écrit tuteur plus    |
-|            |                   | qu'écrit Tuteur             | récent qu'écrit élève        |
-+------------+-------------------+-----------------------------+------------------------------+
-| Leçon      | Pas de composition| Une composition ne dispose  | Toutes les compositions ont  |
-|            | réalisé           | pas de FeedBack             | un FeedBack                  |
-+------------+-------------------+-----------------------------+------------------------------+
+This is a clone of completion report, in which some cell are colorize orange or green.
+No color : activity is not pass
+Orange :student has submit something
+Green :tutor has grade or make a feedback on the last submit.
 
-Il est possible de filtrer les sections à observer ainsi que le groupe d'apprenant.
+So, when color is orange tutor has something to do : grade or make a feedback, and he can access the student's response through a link (clic on the cell).
 
-Le plugin fonctionne sous Firefox 53.0.2, Internet Explorer 11, GoogleChrome 58.
+
+Only 4 activities are supervise (assign, quiz, journal, lesson).
+They must have completion enable.
+
+It's possible to :
+	-hide some section
+	-show only one group
+
