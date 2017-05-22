@@ -1,20 +1,34 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * Fonctions utiles pour l'enrichissement des données du rapport.
+ * Utility functions compute activity's state, and feedback's link.
  * 
  * @package   report_tuteur
- * @copyright 2016 Pole de Ressource Numerique, Universite du Maine
- * @license   sans objet
+ * @copyright 2016 Pole de Ressource Numerique, Universite du Mans
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined ( 'MOODLE_INTERNAL' ) || die ();
 
 /**
- * Fournit le dernier identifiant de tentative du quizz ou -1 si aucune tantative n'est présente.
- * @param $idActivity identifiant technique de l'activite au sein du cours.
- * @param $idUser identifiant de l'etudiant.
- * @return le numero le plus récent de tentative du QCM pour un élève.
- *         Si aucune tentative n'existe on retourne -1.
+ * Return the last quiz attempt id or -1 if not found.
+ * @param string $idActivity current activity's ID.
+ * @param string $idUser the student's ID.
+ * @return number.
  */
 function tuteur_getNumAttempt($idUser, $idActivity) {
 	global $DB;
@@ -28,33 +42,28 @@ function tuteur_getNumAttempt($idUser, $idActivity) {
 }
 
 /**
- * Détermine l'etat de l'activité.
- *
- * @param $idActivity identifiant
- *        	technique de l'activite au sein du cours.
- * @param $idUser identifiant
- *        	de l'etudiant
- * @param $modname nom
- *        	du type de module.
- * @return 2 si le dernier commentaire est plus recent que la derniere
- *         soumission de devoir
- *         1 si la derniere soumission est plus récente que le dernier
- *         commentaire.
- *         0 si aucune soumission.
- */
-function tuteur_getEtat($idUser, $idActivity, $modname) {
+ * Return the state of activity as a number.
+ * 2 if feedback earlier than submission.
+ * 1 if submission earlier than feedback.
+ * 0 no submission.
+ * @param string $idActivity current activity's ID.
+ * @param string $idUser user's ID.
+ * @param string $modname the name of the current module.
+ * @return number.
+ */ 
+function tuteur_getActivityState($idUser, $idActivity, $modname) {
 	try {
 		if ($modname == "quiz") {
-			return tuteur_etatQCM ( $idUser, $idActivity);
+			return tuteur_QuizState ( $idUser, $idActivity);
 		}
 		if ($modname == "journal") {
-			return tuteur_etatJournal ( $idUser, $idActivity);
+			return tuteur_JournalState ( $idUser, $idActivity);
 		}
 		if ($modname == "lesson") {
-			return tuteur_etatLesson ( $idUser, $idActivity );
+			return tuteur_LessonState ( $idUser, $idActivity );
 		}
 		if ($modname == "assign") {
-			return tuteur_etatAssign ( $idUser, $idActivity );
+			return tuteur_AssignState ( $idUser, $idActivity );
 		}
 	} catch ( Exception $err ) {
 		return 0;
@@ -63,18 +72,12 @@ function tuteur_getEtat($idUser, $idActivity, $modname) {
 
 
 /**
- * Fournit l'ensemble des eleves d'un cours.
- * Cette liste correspond a la liste utilisé par défaut lors de la notation d'un
- * assign.
+ * Return a list of the course's student (to reword the row number corresponding student).
  *
- * @param $course l'instance
- *        	du cours d'appartenance des eleves.
- * @return un tableau portant la liste des eleves inscript
- *         avec les informations suivante : id,firstname,lastname,
- *         lastlogin,timemodified (date d inscription au cours)
- *         ,timecreated (date creation de l'enregistrement eleve).
+ * @param stdClass $course current course.
+ * @return array.
  */
-function tuteur_listerEleves($course) {
+function tuteur_StudentList($course) {
 	global $DB;
 	$sql = "SELECT u.id,u.firstname,u.lastname,u.lastlogin, ra.timemodified , u.timecreated
         FROM {user} u
@@ -92,44 +95,42 @@ function tuteur_listerEleves($course) {
 	}
 	return $data;
 }
+
 /**
- * Transforme l'identifiant de l'eleve en numero de ligne.
+ * Return the row number corresponding to student ID.
  *
- * @param $idElev identifiant
- *        	technique de l'eleve.
- * @param $tableauElv l'ensemble
- *        	des eleves du cours.
- * @return le numero de ligne ou se trouve l'eleve recherche ou -1
- *         si l'eleve n'est pas trouve.
+ * @param string $idUser student's ID.
+ * @param array $tabStudent the student present in course. (cf tuteur_StudentList)
+ * @return number.
  */
-function tuteur_getNumRow($idElev, $tableauElv) {
+function tuteur_getNumRow($idUser, $tabStudent) {
 	$indice = 0;
-	while ( $indice < count ( $tableauElv ) && $tableauElv [$indice]->id != $idElev ) {
+	while ( $indice < count ( $tabStudent ) && $tabStudent [$indice]->id != $idUser ) {
 		$indice ++;
 	}
 	
-	if ($indice < count ( $tableauElv )) {
+	if ($indice < count ( $tabStudent )) {
 		return $indice;
 	}
 	return - 1;
 }
 
 /**
- * Retourne le numero de tentative de lesson le plus
- * petit sans feedback pour un eleve et une lesson
- * donnée.
- * Si toutes les compositions disposent d'un feedback, retourne
- * le numero de tentative le plus eleve.
- * Si pas de lesson ou de tentative retourne 0.
+ * Return the lesser lesson's attempt without feedback.
+ * If all lesson's attempt have feedback, return the great attempt.
+ * In other way return 0.
+ * 
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID. 
  */
 function tuteur_getNumAttemptLesson($idUser, $idActivity) {
 	global $DB;
-	$infoActivite = $DB->get_record_select ( 'course_modules', 'id = ?', array ( $idActivity ) );
+	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ( $idActivity ) );
 
 	$sql = "SELECT id
             FROM {lesson_pages}
            WHERE lessonid = ? AND qtype = 10";
-	$rs = $DB->get_recordset_sql ( $sql, array ($infoActivite->instance) );
+	$rs = $DB->get_recordset_sql ( $sql, array ($infoActivity->instance) );
 
 	$data = array ();
 	$nb = 0;
@@ -142,12 +143,12 @@ function tuteur_getNumAttemptLesson($idUser, $idActivity) {
 	}
 
 	$nb = 0;
-	$lesCompos = array ();
+	$compos = array ();
 	foreach ( $data as $page ) {
 		$compo = $DB->get_record_select ( 'lesson_attempts', 'lessonid = ? and pageid = ? and userid = ?', array (
-				$infoActivite->instance, $page->id, $idUser ) );
+				$infoActivity->instance, $page->id, $idUser ) );
 		if (isset ( $compo->useranswer )) {
-			$lesCompos [] = $compo;
+			$compos [] = $compo;
 			$nb ++;
 		}
 	}
@@ -155,36 +156,38 @@ function tuteur_getNumAttemptLesson($idUser, $idActivity) {
 		return 0;
 	}
 	$ret = 0;
-	$numDefaut = 0;
-	foreach ( $lesCompos as $composition ) {
-		$essayinfo = unserialize ( $composition->useranswer );
-		if (! isset ( $essayinfo->response )) {
+	$numDefault = 0;
+	foreach ( $compos as $composition ) {
+		$answer = unserialize ( $composition->useranswer );
+		if (! isset ( $answer->response )) {
 			$ret = 1;
 		} else {
-			if ($essayinfo->response == "") {
+			if ($answer->response == "") {
 
 				if ($ret == 0 || $ret > $composition->id) {
 					$ret = $composition->id;
 				}
 			}
-			if ($numDefaut < $composition->id) {
-				$numDefaut = $composition->id;
+			if ($numDefault < $composition->id) {
+				$numDefault = $composition->id;
 			}
 		}
 	}
 	if ($ret == 0) {
-		$ret = $numDefaut;
+		$ret = $numDefault;
 	}
 	return $ret;
 }
 
-
-// Methodes utilisés en interne
+// PRIVATE Methods
 /**
- * @return la date du dernier commentaire propre aux assign.
- * Assign_grades est modifie lors de la saisie de la note ou du feedback.
+ * Return the earliest comment's date (for assign)
+ * Assign_grades is modified on grade or feedback
+ * 
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID. 
+ * @return long equal to MAX(timemodified)
  */
-//tuteur_
 function tuteur_getModifAssignGrades($idUser, $idActivity) {
 	global $DB;
 	$cours_mod = $DB->get_record ( "course_modules", array ('id' => $idActivity) );
@@ -195,60 +198,65 @@ function tuteur_getModifAssignGrades($idUser, $idActivity) {
 	return 0;
 }
 
-
 /**
- * @return le code etat de l'assign.
- * 0, 1 ou 2 selon aucune soumission, en attente du tuteur, devoir traite.
+ * Return the state of assign activity as a number.
+ * 2 if feedback earlier than submission.
+ * 1 if submission earlier than feedback.
+ * 0 no submission.
+ * 
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID. 
+ * @return number.
  */
-function tuteur_etatAssign($idUser, $idActivity) {
-	$dateNote = 0;
+function tuteur_AssignState($idUser, $idActivity) {
+	$dateGrade = 0;
 	$dateComment = 0;
-	$dateSoumis = 0;
+	$dateSubmit = 0;
 
-	$note = tuteur_isNote($idUser, $idActivity);
-	if (isset ( $note->timemodified )) {
-		$dateNote = $note->timemodified;
+	$grade = tuteur_isGrade($idUser, $idActivity);
+	if (isset ( $grade->timemodified )) {
+		$dateGrade = $grade->timemodified;
 	}
 
 	$idcontext = tuteur_getContext ( $idActivity );
-	$soumissions = tuteur_getDernierSoumis($idUser, $idActivity);
+	$submission = tuteur_getLastSubmit($idUser, $idActivity);
 
-	if (isset ( $soumissions->id )) {
-		$iditem = $soumissions->id;
-		$commentaires = tuteur_getDernierComment ( $idcontext, $iditem );
-		$dateSoumis = $soumissions->timemodified;
+	if (isset ( $submission->id )) {
+		$iditem = $submission->id;
+		$comment = tuteur_getLastComment ( $idcontext, $iditem );
+		$dateSubmit = $submission->timemodified;
 
-		if (isset ( $commentaires->timecreated )) {
-			$dateComment = $commentaires->timecreated;
+		if (isset ( $comment->timecreated )) {
+			$dateComment = $comment->timecreated;
 		}
-		// traitement commentaire propre aux assigns
-		$autreComment = tuteur_getModifAssignGrades ( $idUser, $idActivity );
-		if ($dateComment < $autreComment) {
-			$dateComment = $autreComment;
+
+		$otherComment = tuteur_getModifAssignGrades ( $idUser, $idActivity );
+		if ($dateComment < $otherComment) {
+			$dateComment = $otherComment;
 		}
 	}
 
-	if ($dateNote == 0 && $dateComment == 0 && $dateSoumis == 0) {
+	if ($dateGrade == 0 && $dateComment == 0 && $dateSubmit == 0) {
 		return 0;
 	}
-	if ($dateSoumis > $dateNote && $dateSoumis > $dateComment) {
+	if ($dateSubmit > $dateGrade && $dateSubmit > $dateComment) {
 		return 1;
 	}
-	// autre cas une date existe mais date Soumission n'est pas supérieur
 	return 2;
 }
 
 /**
- * Fournit l'uniqueId le plus récent, des tentatives du quizz ou -1 si aucune tentative n'est présente.
- * @param $idActivity identifiant technique de l'activite au sein du cours.
- * @param $idUser identifiant de l'etudiant
- * @return l'identifiant de la derniere tentative du QCM.
+ * Return the earliest UniqueID of quiz's attempt or -1 if none are present.
+ * 
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID. 
+ * @return number.
  */
 function tuteur_getUniqueIdAttempt($idUser, $idActivity) {
 	global $DB;
-	$infoActivite = $DB->get_record_select ('course_modules', 'id = ?', array ($idActivity) );
+	$infoActivity = $DB->get_record_select ('course_modules', 'id = ?', array ($idActivity) );
 	$rs = $DB->get_field_sql('SELECT uniqueid from {quiz_attempts} where timefinish = (select max(timefinish ) from {quiz_attempts} where quiz=? and userid=?)',
-			array($infoActivite->instance, $idUser));
+			array($infoActivity->instance, $idUser));
 	if (isset ( $rs )) {
 		return $rs;
 	}
@@ -256,18 +264,23 @@ function tuteur_getUniqueIdAttempt($idUser, $idActivity) {
 }
 
 /**
- * @return le code etat d'un test Lesson, 0 = pas de couleur (non passé ou pas
- *         de composition dans cette lecon)
- *         1 composition non commentée, 2 composition commenté.
+ * Return the state of lesson activity as a number.
+ * 2 if feedback earlier than submission.
+ * 1 if submission earlier than feedback.
+ * 0 no submission.
+ * 
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID. 
+ * @return number.
  */
-function tuteur_etatLesson($idUser, $idActivity) {
+function tuteur_LessonState($idUser, $idActivity) {
 	global $DB;
-	$infoActivite = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
+	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
 	
 	$sql = "SELECT id
             FROM {lesson_pages}
            WHERE lessonid = ? AND qtype = 10";
-	$rs = $DB->get_recordset_sql ( $sql, array ($infoActivite->instance) );
+	$rs = $DB->get_recordset_sql ( $sql, array ($infoActivity->instance) );
 	
 	$data = array ();
 	$nb = 0;
@@ -280,7 +293,7 @@ function tuteur_etatLesson($idUser, $idActivity) {
 	}
 	
 	$nb = 0;
-	$lesCompos = array ();
+	$compos = array ();
 	foreach ( $data as $page ) {
 		$compo = $DB->get_record_select ( 'lesson_attempts', 'lessonid = ? and pageid = ? and userid = ?', array (
 				$infoActivite->instance,
@@ -288,19 +301,20 @@ function tuteur_etatLesson($idUser, $idActivity) {
 				$idUser 
 		) );
 		if (isset ( $compo->useranswer )) {
-			$lesCompos [] = $compo->useranswer;
+			$compos [] = $compo->useranswer;
 			$nb ++;
 		}
 	}
-	if ($nb == 0)
+	if ($nb == 0) {
 		return 0;
+	}
 	$ret = 2;
-	foreach ( $lesCompos as $composition ) {
-		$essayinfo = unserialize ( $composition );
-		if (! isset ( $essayinfo->response )) {
+	foreach ( $compos as $composition ) {
+		$answer = unserialize ( $composition );
+		if (! isset ( $answer->response )) {
 			$ret = 1;
 		} else {
-			if ($essayinfo->response == "")
+			if ($answer->response == "")
 				$ret = 1;
 		}
 	}
@@ -308,22 +322,26 @@ function tuteur_etatLesson($idUser, $idActivity) {
 }
 
 /**
- * @return le code etat d'un test journal, 0 = non passé
- * 1 test non commenté, 2 test passé et commenté ou verrouillé par carnet de note.
- * Modification pour prendre en compte l'activité journal non noté, on s'appuye
- * alors uniquement sur le dernier utilisateur ayant ecrit dans le journal.
+ * Return the state of journal activity as a number.
+ * 2 if feedback earlier than submission.
+ * 1 if submission earlier than feedback.
+ * 0 no submission.
+ *
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID.
+ * @return number.
  */
-function tuteur_etatJournal($idUser, $idActivity) {
+function tuteur_JournalState($idUser, $idActivity) {
 	global $DB;
 	
-	$infoActivite = $DB->get_record_select ( 'course_modules', 'id = ?', array ( $idActivity ) );
+	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ( $idActivity ) );
 	
 	$gradeItem = $DB->get_record_select ( 'grade_items', 'courseid = ? and iteminstance = ? and itemmodule = ?', array (
-			$infoActivite->course,
-			$infoActivite->instance,
+			$infoActivity->course,
+			$infoActivity->instance,
 			'journal' ) );
 	
-	// MODIFICATION 05/10/2016
+	// MODIFIED 05/10/2016
 	if (isset ( $gradeItem->id )) {
 		$sql = "SELECT overridden
                 FROM {grade_grades}
@@ -334,11 +352,11 @@ function tuteur_etatJournal($idUser, $idActivity) {
 		}
 	}
 
-	$entreJournal = $DB->get_record_select ( 'journal_entries', 'journal = ? and userid = ?', array ($infoActivite->instance, $idUser ) );
-	if (! isset($entreJournal->modified)) {
+	$inJournal = $DB->get_record_select ( 'journal_entries', 'journal = ? and userid = ?', array ($infoActivity->instance, $idUser ) );
+	if (! isset($inJournal->modified)) {
 		return 0;
 	}
-	if ($entreJournal->modified > $entreJournal->timemarked) {
+	if ($inJournal->modified > $inJournal->timemarked) {
 		return 1;
 	}
 	
@@ -346,19 +364,21 @@ function tuteur_etatJournal($idUser, $idActivity) {
 }
 
 /**
- * @param $idUser identifiant technique de l'eleve.
- * @param $idActivity identifiant technique de l'activite.
- * @return le code etat d'un test QCM, 0 = non passé
- *         1 test non commenté, 2 test passé et commenté.
+ * Return the state of quiz activity as a number.
+ * 2 if feedback earlier than submission.
+ * 1 if submission earlier than feedback.
+ * 0 no submission.
+ *
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID.
+ * @return number.
  */
-function tuteur_etatQCM($idUser, $idActivity) {
+function tuteur_QuizState($idUser, $idActivity) {
 	global $DB;
 	
-	$infoActivite = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
+	$idLastAttempt = tuteur_getUniqueIdAttempt ( $idUser, $idActivity );
 	
-	$idDerniereTentative = tuteur_getUniqueIdAttempt ( $idUser, $idActivity );
-	
-	if ($idDerniereTentative == false || $idDerniereTentative == - 1) {
+	if ($idLastAttempt == false || $idLastAttempt == - 1) {
 		return 0;
 	}
 	
@@ -368,7 +388,7 @@ function tuteur_etatQCM($idUser, $idActivity) {
 			where qa.questionusageid = ?
             and st.state like 'mangr%' 
 		    and st.userid != ?";
-	$rs = $DB->get_field_sql($sql, array($idDerniereTentative, $idUser));
+	$rs = $DB->get_field_sql($sql, array($idLastAttempt, $idUser));
 	if ($rs == 0) {
 		return 1;
 	}
@@ -377,8 +397,10 @@ function tuteur_etatQCM($idUser, $idActivity) {
 }
 
 /**
- * @param $idActivity l'identifiant technique de l'activité.
- * @return le context associé a une activité.
+ * Return context linked with activity.
+ * 
+ * @param string $idActivity activity's ID.
+ * @return number.
  */
 function tuteur_getContext($idActivity) {
 	global $DB;
@@ -387,18 +409,16 @@ function tuteur_getContext($idActivity) {
 }
 
 /**
- * Determine si un eleve possede une note pour une activite (restreinte a assign).
- * Il faut passer par course_modules pour relier l'item a une eventuelle note.
+ * Return the student's grade of assign or null.
  *
- * @param $idUser identifiant technique de l'eleve.
- * @param $idActivity identifiant technique de l'activite.
- * @return la structure de la note de l'eleve pour l activite, ou null si aucune note n'est presente.
- *         La note est fournie avec sa valeur, son feedback et la date d'attribution
- *         $rs->finalgrade, $rs->feedback, $rs->timemodified.
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID.
+ * @return stdClass of grade, contain attribute
+ *         $ret->finalgrade, $ret->feedback, $ret->timemodified.
  */
-function tuteur_isNote($idUser, $idActivity) {
+function tuteur_isGrade($idUser, $idActivity) {
 	global $DB;
-	$infoActivite = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
+	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
 
 	$sql = "SELECT g.finalgrade, g.feedback, g.timemodified
               FROM {grade_grades} g
@@ -406,11 +426,11 @@ function tuteur_isNote($idUser, $idActivity) {
              WHERE a.courseid = ? and a.iteminstance= ? and itemmodule=? and g.userid=?";
 		
 		
-	$rs = $DB->get_record_sql($sql, array($infoActivite->course, $infoActivite->instance, 'assign', $idUser));
+	$rs = $DB->get_record_sql($sql, array($infoActivity->course, $infoActivity->instance, 'assign', $idUser));
 				
 	if (isset ( $rs )) {
-		$note = $rs->finalgrade;
-		if ($note != NULL) {
+		$grade = $rs->finalgrade;
+		if ($grade != NULL) {
 			return $rs;
 		}
 	}
@@ -418,32 +438,33 @@ function tuteur_isNote($idUser, $idActivity) {
 }
 
 /**
- * Fournit la derniere soumission d'assignment de l'eleve.
- *
- * @param $idUser identifiant technique de l eleve.
- * @param $idActivity identifiant technique de l'activite.
- * @return le status de la soumission ('new' pour vide, submitted pour soumis).
+ * Return the lastest assign's submission.
+ * 
+ * @param string $idUser student's ID.
+ * @param string $idActivity activity's ID.
+ * @return stdClass of assign_submission.
  */
-function tuteur_getDernierSoumis($idUser, $idActivity) {
+function tuteur_getLastSubmit($idUser, $idActivity) {
 	global $DB;
-	$infoActivite = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
+	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
 		
  	$sql = "SELECT id, status, timemodified
  				  FROM {assign_submission}
 		         WHERE timemodified = (SELECT max(timemodified) FROM {assign_submission} WHERE assignment = ? and userid=? AND status='submitted')
 		           AND assignment = ? and userid=? AND status='submitted'";
-	$rs = $DB->get_record_sql($sql,	array($infoActivite->instance, $idUser, $infoActivite->instance, $idUser));
+	$rs = $DB->get_record_sql($sql,	array($infoActivity->instance, $idUser, $infoActivity->instance, $idUser));
 		
 	return $rs;
 }
 
 /**
- * Fournit le commentaire le plus récent pour une activite.
- * @param $idcontext identifiant technique du contexte de l'activité.
- * @param $iditem l'identifiant technique de l'item.
- * @return le commentaire le plus récent pour une activité
+ * Return the lastest activity's feedback.
+ *
+ * @param int $idcontext activity's context ID.
+ * @param int $iditem item's ID.
+ * @return stdClass of comments.
  */
-function tuteur_getDernierComment($idcontext, $iditem) {
+function tuteur_getLastComment($idcontext, $iditem) {
 	global $DB;
 	
 	$sql = "SELECT content, timecreated

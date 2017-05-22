@@ -1,27 +1,39 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * report_tuteur version information.
- * Modification du rapport de suivi d'achevement, pour mettre en valeur les actions a réaliser
- * par les tuteurs. Chaque devoir doit être noté, chaque QCM doit être commenté.
- * Les cellules passe alors de la couleur Orange a Verte.
- * Ajout de try catch sur recherche info :Quizz, lesson, journal (pb de données)
- * Traitement des activites journal non notés.
- * Modification du traitement consacré aux QCM (Test) prise en compte du feedback.
- * Ajout des Aides
- * 01/12/2016 correction des liens sur assign, pour eviter les changement selon le role de l'operateur.
- * 14/03/2017 correction sur choix coloration des tests + verification du tri, trié par nom
- * 21/03/2017 modification de l'affichage nom prenom
- * 13/04/2017 ajout du filtre sur les groupes
- * 14/04/2017 modification style th,td pour supprimer les lignes du tableau lors du passage en version 3.2.2
- * 09/05/2017 modification colonne/cache/visible compatible avec les differents navigateurs et revue de code
+ * Clone of completion report, show tutor's action must be do
+ * 
+ * 01/12/2016 fix assign's links.
+ * 14/03/2017 fix selector choose activity + check order of student
+ * 21/03/2017 fix display lastname before firstname (french style)
+ * 13/04/2017 add group selector
+ * 14/04/2017 change css style th,td for theme of Moodle 3.2.2
+ * 09/05/2017 change javascript show/hide section, assume compatibility with more browser
+ * 15/05/2017 add licence GNU GPL.
+ * 16/05/2017 english translation
  * @package   report_tuteur
- * @copyright 2016 Pole de Ressource Numerique, Universite du Maine
- * @license   sans objet
+ * @copyright 2016 Pole de Ressource Numerique, Universite du Mans
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2017051001;
+$plugin->version   = 2017052203;
 $plugin->requires  = 2015111000;
 $plugin->cron      = 0;
 $plugin->component = 'report_tuteur';

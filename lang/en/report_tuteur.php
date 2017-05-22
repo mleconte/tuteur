@@ -15,16 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'report_roster', language 'en'
+ * Strings for component 'report_tuteur', language 'en'
  *
- * @package   report_roster
- * @copyright 2013 Lafayette College ITS
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   report_tuteur
+ * @copyright 2016 Pole de Ressource Numerique, Universite du Mans
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
 $string['allusers'] = 'All users';
+$string['all_group'] = 'Tous les groupes';
 $string['displaymode'] = 'Display mode';
 $string['learningmodeoff'] = 'Learning mode off';
 $string['learningmodeon'] = 'Learning mode on';
@@ -57,6 +58,8 @@ $string['selecteur_help'] = 'Vous permet de choisir les types d&rsquo;activit&ea
 
 En r&eacute;sum&eacute; : orange une action du tuteur est requise.		
 		';
-$string['oeil_help'] = 'Vous permet cacher/afficher une section du cours';
-$string['oeil'] = 'cacher/afficher';
-
+$string['eye_help'] = 'Vous permet cacher/afficher une section du cours';
+$string['eye'] = 'cacher/afficher';
+$string['student-report'] = 'Rapport Etudiant';
+$string['filter'] = 'Filtrer';
+$string['symbol'] = 'Symbole';
