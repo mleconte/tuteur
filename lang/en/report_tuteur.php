@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 $string['allusers'] = 'All users';
-$string['all_group'] = 'Tous les groupes';
+$string['all_group'] = 'All groups';
 $string['displaymode'] = 'Display mode';
 $string['learningmodeoff'] = 'Learning mode off';
 $string['learningmodeon'] = 'Learning mode on';
@@ -36,30 +36,30 @@ $string['webmode'] = 'Web report';
 $string['page-report-tuteur-x'] = 'Any tuteur report';
 $string['page-report-tuteur-index'] = 'Activity tuteur report';
 $string['page-report-tuteur-user'] = 'User activity completion report';
-$string['selecteur'] = 'S&#233;lecteur'; //titre de la boite d'aide //S&eacute;lecteur
-$string['selecteur_help'] = 'Vous permet de choisir les types d&rsquo;activit&eacute;s &agrave; coloriser<br/>
+$string['selecteur'] = 'Selector';
+$string['selecteur_help'] = 'You can choose activity you want supervise<br/>
 		
-* Cocher l&rsquo;activit&eacute; 
-* Puis cliquer sur le bouton Filtrer
+* Check activity 
+* Then clic on filter button
 
-<H2>R&egrave;gles de colorisation</h2>
-<p>Devoir</p>
-* orange :L&rsquo;&eacute;tudiant a soumis un devoir qui n&rsquo;est pas encore not&eacute; et/ou n&rsquo;a pas eu de feeback 
-* vert :Le dernier devoir soumis a re&ccedil;u une note ou un feedback.
-<p>Test</p>
-* orange : aucun feedback sur la derni&egrave;re tentative.
-* vert : au moins une question de la derni&egrave;re tentative poss&egrave;de un feedback.
+<H2>Rules for color</h2>
+<p>Assign</p>
+* orange : assign submit but not yet grade or feedback 
+* green : the last assign was grade or feedback
+<p>Quiz</p>
+* orange : the last attempt has no feedback
+* green : at least one question of the last attempt have a feedback
 <p>Journal</p>
-* orange : l&rsquo;&eacute;tudiant a &eacute;crit dans le journal, sans avoir eu de r&eacute;ponse ni de note.
-* vert : le journal est not&eacute; ou le dernier &eacute;crit est celui du tuteur. 
-<p>Le&ccedil;on</p>
-* orange :une composition ne poss&egrave;de pas de feedback.
-* vert :toutes les compositions ont un feedback.
+* orange : the student has wrote something without feedback or grade
+* green : the journal is grade or the last student&quote;article has a response
+<p>Lesson</p>
+* orange : a composition without feedback
+* green : all compositions have a feedback.
 
-En r&eacute;sum&eacute; : orange une action du tuteur est requise.		
+So orange when tutor action is require.
 		';
-$string['eye_help'] = 'Vous permet cacher/afficher une section du cours';
-$string['eye'] = 'cacher/afficher';
-$string['student-report'] = 'Rapport Etudiant';
-$string['filter'] = 'Filtrer';
-$string['symbol'] = 'Symbole';
+$string['eye_help'] = 'hide/show a section';
+$string['eye'] = 'hide/show';
+$string['student-report'] = 'Student report';
+$string['filter'] = 'Filter';
+$string['symbol'] = 'Symbol';

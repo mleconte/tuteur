@@ -42,12 +42,13 @@ require_once (dirname ( __FILE__ ) . '/../../config.php');
 require_once (dirname ( __FILE__ ) . '/tuteurlib.php');
 require_once ($CFG->libdir . '/completionlib.php');
 require_once ('coursegroup.php');
-const NOT_SECTION = - 1;
-const SHOW_SECTION = 'show';
-const HIDE_SECTION = 'hide';
 
-const NOT_CHECK = '#FF9B37';
-const CHECK = '#AEFFAE';
+const REPORT_TUTEUR_NOT_SECTION = - 1;
+const REPORT_TUTEUR_SHOW_SECTION = 'show';
+const REPORT_TUTEUR_HIDE_SECTION = 'hide';
+
+const REPORT_TUTEUR_NOT_CHECK = '#FF9B37';
+const REPORT_TUTEUR_CHECK = '#AEFFAE';
 
 // Get course
 $id = required_param ( 'course', PARAM_INT );
@@ -103,11 +104,11 @@ $PAGE->requires->js ( '/report/tuteur/textrotate.js' );
 $PAGE->requires->js_function_call ( 'textrotate_init', null, true );
 
 // Activities - sum nb item per section
-$zr_activity = NOT_SECTION;
+$zr_activity = REPORT_TUTEUR_NOT_SECTION;
 $nbActivityPerSection = array ();
 $counter = 0;
 foreach ( $activities as $activity ) {
-	if ($zr_activity == NOT_SECTION) {
+	if ($zr_activity == REPORT_TUTEUR_NOT_SECTION) {
 		$counter = 0;
 		$zr_activity = $activity->sectionnum;
 	}
@@ -122,12 +123,7 @@ foreach ( $activities as $activity ) {
 $nbActivityPerSection [$zr_activity] = $counter;
 
 // Get list student for grade assignment
-$listStudent = tuteur_StudentList ($course);
-
-// Define table style
-print ("<style>") ;
-print ("th,td { border-top:none!important; border-right:none!important;} ");
-print ("</style>") ;
+$listStudent = report_tuteur_StudentList ($course);
 
 // Define  javascript function
 print ("<script language='javascript'>\nfunction showHide(id){ \n") ;
@@ -166,7 +162,7 @@ if (! $total) {
 	echo $OUTPUT->footer ();
 	exit ();
 }
-$handleGroup = new coursegroup($course->id);
+$handleGroup = new report_tuteur_coursegroup($course->id);
 
 // choose activity to color
 print ("<FORM action='#' method='POST'>") ;
@@ -230,22 +226,24 @@ if ($paramGroup == null) {
 print ("<INPUT TYPE='submit' NAME='btn' VALUE='".get_string('filter', 'report_tuteur' )."'> &nbsp;") ; 
 
 print ($OUTPUT->help_icon ( "selecteur", "report_tuteur", "" )) ;
-print ("&nbsp;&nbsp;".get_string('symbol', 'report_tuteur' )."&nbsp;&nbsp;<img src='" . $OUTPUT->pix_url ( 'i/' . SHOW_SECTION ) . "' >") ; 
+print ("&nbsp;&nbsp;".get_string('symbol', 'report_tuteur' )."&nbsp;&nbsp;<img src='" . $OUTPUT->pix_url ( 'i/' . REPORT_TUTEUR_SHOW_SECTION ) . "' >") ; 
 print ($OUTPUT->help_icon ( "eye", "report_tuteur", "" )) ;
 print ("</FORM>") ;
 
 print '<div id="completion-progress-wrapper" class="no-overflow">';
 
 // Define table
-print '<table  class="generaltable flexible boxaligncenter" id="completion-progress" style="text-align:left">';
+print '<table  class="generaltable flexible boxaligncenter report-tuteur" id="completion-progress" style="text-align:left">';
 print ('<thead><tr style="vertical-align:top">') ;
 
 // First line - Table Header 
 print ("<td></td><td></td>") ;
 for($i = 0; $i <= $zr_activity; $i ++) {
 	if (isset ( $nbActivityPerSection [$i] )) {
-		print ("<td name='Section". $i ."' style='display:none;'><a href=\"javascript:showHide('Section" . $i . "');\"><img src='" . $OUTPUT->pix_url ( 'i/' . HIDE_SECTION ) . "' ></a></td>") ;
-		print ("<td name='Section". $i ."' style='display:table-cell;' colspan='" . $nbActivityPerSection [$i] . "'><a href=\"javascript:showHide('Section" . $i . "');\">".get_string ('section') . $i . "&nbsp;<img src='" . $OUTPUT->pix_url ( 'i/' . SHOW_SECTION ) . "' ></a></td>") ;
+		print ("<td name='Section". $i ."' style='display:none;'><a href=\"javascript:showHide('Section" . $i . "');\">");
+		print ("<img src='" . $OUTPUT->pix_url ( 'i/' . REPORT_TUTEUR_HIDE_SECTION ) . "' ></a></td>") ;
+		print ("<td name='Section". $i ."' style='display:table-cell;' colspan='" . $nbActivityPerSection [$i] . "'>");
+		print ("<a href=\"javascript:showHide('Section" . $i . "');\">".get_string ('section') . $i . "&nbsp;<img src='" . $OUTPUT->pix_url ( 'i/' . REPORT_TUTEUR_SHOW_SECTION ) . "' ></a></td>") ;
 	}
 }
 print ("</tr>") ;
@@ -258,7 +256,7 @@ print '</th><th style="font-size:0.75em;vertical-align:bottom;min-width:90px">' 
 
 // Activities
 $formattedactivities = array ();
-$zr_activity = NOT_SECTION;
+$zr_activity = REPORT_TUTEUR_NOT_SECTION;
 foreach ( $activities as $activity ) {
 	$datepassed = $activity->completionexpected && $activity->completionexpected <= time ();
 	$datepassedclass = $datepassed ? 'completion-expired' : '';
@@ -303,7 +301,7 @@ foreach ( $progress as $user ) {
 	echo '<td>&nbsp;<a href="' . $reportLink . '&mode=complete"> <img src="' . $OUTPUT->pix_url ( 'i/report' ) . '" ></a>&nbsp; /&nbsp; <a href="' . $reportLink . '&mode=outline"> <img src="' . $OUTPUT->pix_url ( 'i/news' ) . '" ></td>';
 	
 	//completion on activity
-	$zr_activity = NOT_SECTION;
+	$zr_activity = REPORT_TUTEUR_NOT_SECTION;
 	foreach ( $activities as $activity ) {
 		// Hiding col
 		if ($zr_activity != $activity->sectionnum) {
@@ -326,23 +324,23 @@ foreach ( $progress as $user ) {
 		
 		// handle cell color
 		if (isset ( $filter [$activity->modname] ) && $filter [$activity->modname] == 1) {
-			$activityState = tuteur_getActivityState ( $user->id, $activity->id, $activity->modname );
+			$activityState = report_tuteur_getActivityState ( $user->id, $activity->id, $activity->modname );
 			if ($activityState == 1) {
-				$cellStyle = ' style = "background-color:' . NOT_CHECK . '!important;display:table-cell;"';
+				$cellStyle = ' style = "background-color:' . REPORT_TUTEUR_NOT_CHECK . '!important;display:table-cell;"';
 			} elseif ($activityState == 2) {
-				$cellStyle = ' style = "background-color:' . CHECK . '!important;display:table-cell;"';
+				$cellStyle = ' style = "background-color:' . REPORT_TUTEUR_CHECK . '!important;display:table-cell;"';
 			}
 			
 			if ($cellStyle != '') {
 				if ($activity->modname == 'assign') {
-					$lineNumber = tuteur_getNumRow ( $user->id, $listStudent );
+					$lineNumber = report_tuteur_getNumRow ( $user->id, $listStudent );
 					if ($lineNumber != - 1) {
 						$cellLink = $CFG->wwwroot . '/mod/assign/view.php?id=' . $activity->id . '&rownum=' . $lineNumber . '&action=grade&userid=' . $user->id;
 					}
 				}
 
 				if ($activity->modname == 'quiz') {
-					$numAttempt = tuteur_getNumAttempt ( $user->id, $activity->id );
+					$numAttempt = report_tuteur_getNumAttempt ( $user->id, $activity->id );
 					$cellLink = $CFG->wwwroot . '/mod/quiz/review.php?attempt=' . $numAttempt;
 				}
 			
@@ -351,7 +349,7 @@ foreach ( $progress as $user ) {
 				}
 			
 				if ($activity->modname == 'lesson') {
-					$numAttempt = tuteur_getNumAttemptLesson ( $user->id, $activity->id );
+					$numAttempt = report_tuteur_getNumAttemptLesson ( $user->id, $activity->id );
 					$cellLink = $CFG->wwwroot . '/mod/lesson/essay.php?id=' . $activity->id . '&mode=grade&attemptid=' . $numAttempt . '&sesskey=' . $USER->sesskey;
 				}
 			}

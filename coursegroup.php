@@ -22,7 +22,7 @@
  * @copyright 2016 Pole de Ressource Numerique, Universite du Mans
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class coursegroup {
+class report_tuteur_coursegroup {
 	/** course ID.*/
 	private $courseId;
 	/** number of group (not empty) present in the course.*/

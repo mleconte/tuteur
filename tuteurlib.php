@@ -30,7 +30,7 @@ defined ( 'MOODLE_INTERNAL' ) || die ();
  * @param string $idUser the student's ID.
  * @return number.
  */
-function tuteur_getNumAttempt($idUser, $idActivity) {
+function report_tuteur_getNumAttempt($idUser, $idActivity) {
 	global $DB;
 	$infoActivite = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
 	$rs = $DB->get_field('quiz_attempts', 'MAX(id)', array('quiz' => $infoActivite->instance, 'userid' => $idUser));
@@ -51,19 +51,19 @@ function tuteur_getNumAttempt($idUser, $idActivity) {
  * @param string $modname the name of the current module.
  * @return number.
  */ 
-function tuteur_getActivityState($idUser, $idActivity, $modname) {
+function report_tuteur_getActivityState($idUser, $idActivity, $modname) {
 	try {
 		if ($modname == "quiz") {
-			return tuteur_QuizState ( $idUser, $idActivity);
+			return report_tuteur_QuizState ( $idUser, $idActivity);
 		}
 		if ($modname == "journal") {
-			return tuteur_JournalState ( $idUser, $idActivity);
+			return report_tuteur_JournalState ( $idUser, $idActivity);
 		}
 		if ($modname == "lesson") {
-			return tuteur_LessonState ( $idUser, $idActivity );
+			return report_tuteur_LessonState ( $idUser, $idActivity );
 		}
 		if ($modname == "assign") {
-			return tuteur_AssignState ( $idUser, $idActivity );
+			return report_tuteur_AssignState ( $idUser, $idActivity );
 		}
 	} catch ( Exception $err ) {
 		return 0;
@@ -77,7 +77,7 @@ function tuteur_getActivityState($idUser, $idActivity, $modname) {
  * @param stdClass $course current course.
  * @return array.
  */
-function tuteur_StudentList($course) {
+function report_tuteur_StudentList($course) {
 	global $DB;
 	$sql = "SELECT u.id,u.firstname,u.lastname,u.lastlogin, ra.timemodified , u.timecreated
         FROM {user} u
@@ -100,10 +100,10 @@ function tuteur_StudentList($course) {
  * Return the row number corresponding to student ID.
  *
  * @param string $idUser student's ID.
- * @param array $tabStudent the student present in course. (cf tuteur_StudentList)
+ * @param array $tabStudent the student present in course. (cf report_tuteur_StudentList)
  * @return number.
  */
-function tuteur_getNumRow($idUser, $tabStudent) {
+function report_tuteur_getNumRow($idUser, $tabStudent) {
 	$indice = 0;
 	while ( $indice < count ( $tabStudent ) && $tabStudent [$indice]->id != $idUser ) {
 		$indice ++;
@@ -123,7 +123,7 @@ function tuteur_getNumRow($idUser, $tabStudent) {
  * @param string $idUser student's ID.
  * @param string $idActivity activity's ID. 
  */
-function tuteur_getNumAttemptLesson($idUser, $idActivity) {
+function report_tuteur_getNumAttemptLesson($idUser, $idActivity) {
 	global $DB;
 	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ( $idActivity ) );
 
@@ -188,7 +188,7 @@ function tuteur_getNumAttemptLesson($idUser, $idActivity) {
  * @param string $idActivity activity's ID. 
  * @return long equal to MAX(timemodified)
  */
-function tuteur_getModifAssignGrades($idUser, $idActivity) {
+function report_tuteur_getModifAssignGrades($idUser, $idActivity) {
 	global $DB;
 	$cours_mod = $DB->get_record ( "course_modules", array ('id' => $idActivity) );
 	$rs = $DB->get_field('assign_grades', 'MAX(timemodified)', array('assignment' => $cours_mod->instance ,'userid' =>  $idUser) );
@@ -208,29 +208,29 @@ function tuteur_getModifAssignGrades($idUser, $idActivity) {
  * @param string $idActivity activity's ID. 
  * @return number.
  */
-function tuteur_AssignState($idUser, $idActivity) {
+function report_tuteur_AssignState($idUser, $idActivity) {
 	$dateGrade = 0;
 	$dateComment = 0;
 	$dateSubmit = 0;
 
-	$grade = tuteur_isGrade($idUser, $idActivity);
+	$grade = report_tuteur_isGrade($idUser, $idActivity);
 	if (isset ( $grade->timemodified )) {
 		$dateGrade = $grade->timemodified;
 	}
 
-	$idcontext = tuteur_getContext ( $idActivity );
-	$submission = tuteur_getLastSubmit($idUser, $idActivity);
+	$idcontext = report_tuteur_getContext ( $idActivity );
+	$submission = report_tuteur_getLastSubmit($idUser, $idActivity);
 
 	if (isset ( $submission->id )) {
 		$iditem = $submission->id;
-		$comment = tuteur_getLastComment ( $idcontext, $iditem );
+		$comment = report_tuteur_getLastComment ( $idcontext, $iditem );
 		$dateSubmit = $submission->timemodified;
 
 		if (isset ( $comment->timecreated )) {
 			$dateComment = $comment->timecreated;
 		}
 
-		$otherComment = tuteur_getModifAssignGrades ( $idUser, $idActivity );
+		$otherComment = report_tuteur_getModifAssignGrades ( $idUser, $idActivity );
 		if ($dateComment < $otherComment) {
 			$dateComment = $otherComment;
 		}
@@ -252,7 +252,7 @@ function tuteur_AssignState($idUser, $idActivity) {
  * @param string $idActivity activity's ID. 
  * @return number.
  */
-function tuteur_getUniqueIdAttempt($idUser, $idActivity) {
+function report_tuteur_getUniqueIdAttempt($idUser, $idActivity) {
 	global $DB;
 	$infoActivity = $DB->get_record_select ('course_modules', 'id = ?', array ($idActivity) );
 	$rs = $DB->get_field_sql('SELECT uniqueid from {quiz_attempts} where timefinish = (select max(timefinish ) from {quiz_attempts} where quiz=? and userid=?)',
@@ -273,7 +273,7 @@ function tuteur_getUniqueIdAttempt($idUser, $idActivity) {
  * @param string $idActivity activity's ID. 
  * @return number.
  */
-function tuteur_LessonState($idUser, $idActivity) {
+function report_tuteur_LessonState($idUser, $idActivity) {
 	global $DB;
 	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
 	
@@ -331,7 +331,7 @@ function tuteur_LessonState($idUser, $idActivity) {
  * @param string $idActivity activity's ID.
  * @return number.
  */
-function tuteur_JournalState($idUser, $idActivity) {
+function report_tuteur_JournalState($idUser, $idActivity) {
 	global $DB;
 	
 	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ( $idActivity ) );
@@ -373,10 +373,10 @@ function tuteur_JournalState($idUser, $idActivity) {
  * @param string $idActivity activity's ID.
  * @return number.
  */
-function tuteur_QuizState($idUser, $idActivity) {
+function report_tuteur_QuizState($idUser, $idActivity) {
 	global $DB;
 	
-	$idLastAttempt = tuteur_getUniqueIdAttempt ( $idUser, $idActivity );
+	$idLastAttempt = report_tuteur_getUniqueIdAttempt ( $idUser, $idActivity );
 	
 	if ($idLastAttempt == false || $idLastAttempt == - 1) {
 		return 0;
@@ -402,7 +402,7 @@ function tuteur_QuizState($idUser, $idActivity) {
  * @param string $idActivity activity's ID.
  * @return number.
  */
-function tuteur_getContext($idActivity) {
+function report_tuteur_getContext($idActivity) {
 	global $DB;
 	$rs = $DB->get_field_sql('SELECT id FROM {context} WHERE instanceid = ? AND contextlevel = 70', array($idActivity));
 	return $rs;
@@ -416,7 +416,7 @@ function tuteur_getContext($idActivity) {
  * @return stdClass of grade, contain attribute
  *         $ret->finalgrade, $ret->feedback, $ret->timemodified.
  */
-function tuteur_isGrade($idUser, $idActivity) {
+function report_tuteur_isGrade($idUser, $idActivity) {
 	global $DB;
 	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
 
@@ -444,7 +444,7 @@ function tuteur_isGrade($idUser, $idActivity) {
  * @param string $idActivity activity's ID.
  * @return stdClass of assign_submission.
  */
-function tuteur_getLastSubmit($idUser, $idActivity) {
+function report_tuteur_getLastSubmit($idUser, $idActivity) {
 	global $DB;
 	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array ($idActivity) );
 		
@@ -464,7 +464,7 @@ function tuteur_getLastSubmit($idUser, $idActivity) {
  * @param int $iditem item's ID.
  * @return stdClass of comments.
  */
-function tuteur_getLastComment($idcontext, $iditem) {
+function report_tuteur_getLastComment($idcontext, $iditem) {
 	global $DB;
 	
 	$sql = "SELECT content, timecreated
