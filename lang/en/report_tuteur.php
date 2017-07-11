@@ -63,3 +63,5 @@ $string['eye'] = 'hide/show';
 $string['student-report'] = 'Student report';
 $string['filter'] = 'Filter';
 $string['symbol'] = 'Symbol';
+$string['zero-activity']='They are no activity under supervision';
+$string['no-more-activity']='No more activity after filter';

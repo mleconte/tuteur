@@ -53,3 +53,5 @@ En r&eacute;sum&eacute; : orange une action du tuteur est requise.
 		';
 $string['student-report'] = 'Rapport Etudiant';
 $string['symbol'] = 'Symbole';
+$string['zero-activity']='Ce cours ne dispose pas d&quote;activit&eacute;es surveill&eacute;es';
+$string['no-more-activity']='Aucun r&eacute;sultat suite au filtre !';

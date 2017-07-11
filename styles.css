@@ -1,8 +1,8 @@
 table.report-tuteur td{
-  border-top:none!important;
-  border-right:none!important;
+  border-top:none;
+  border-right:none;
 }
 table.report-tuteur th{
-  border-top:none!important;
-  border-right:none!important;
+  border-top:none;
+  border-right:none;
 }
