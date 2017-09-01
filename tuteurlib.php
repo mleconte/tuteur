@@ -337,9 +337,10 @@ function report_tuteur_getUniqueIdAttempt($idUser, $idActivity) {
 	$infoActivity = $DB->get_record_select ( 'course_modules', 'id = ?', array (
 			$idActivity 
 	) );
-	$rs = $DB->get_field_sql ( 'SELECT uniqueid from {quiz_attempts} where timefinish = (select max(timefinish ) from {quiz_attempts} where quiz=? and userid=?)', array (
+	$rs = $DB->get_field_sql ( 'SELECT uniqueid from {quiz_attempts} where timefinish = (select max(timefinish ) from {quiz_attempts} where quiz=? and userid=?) and userid=?', array (
 			$infoActivity->instance,
-			$idUser 
+			$idUser,
+			$idUser
 	) );
 	if (isset ( $rs )) {
 		return $rs;
@@ -488,8 +489,7 @@ function report_tuteur_QuizState($idUser, $idActivity) {
 	$sql = "SELECT count(st.id)
 			FROM {question_attempt_steps} st
 			JOIN {question_attempts} qa ON qa.id = st.questionattemptid
-			where qa.questionusageid = ?
-            and st.state like 'mangr%' 
+			where qa.questionusageid = ? 
 		    and st.userid != ?";
 	$rs = $DB->get_field_sql ( $sql, array (
 			$idLastAttempt,
