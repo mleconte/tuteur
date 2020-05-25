@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * report_tuteur version information.
@@ -28,7 +28,7 @@
  * 15/05/2017 add licence GNU GPL.
  * 16/05/2017 english translation
  * 11/07/2017 only view activities under supervision.
- * 
+ * 22/02/2018 add dialoguegrade activity on supervision.
  * @package report_tuteur
  * @copyright 2016 Pole de Ressource Numerique, Universite du Mans
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -36,9 +36,9 @@
 
 defined ( 'MOODLE_INTERNAL' ) || die ();
 
-$plugin->version = 2017082801;
+$plugin->version  = 2019060504;
 $plugin->requires = 2015111000;
 $plugin->cron = 0;
 $plugin->component = 'report_tuteur';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = 'v1.0';
+$plugin->release = 'v1.2';

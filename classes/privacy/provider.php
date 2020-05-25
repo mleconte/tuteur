@@ -15,27 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capabilities
+ * Privacy Subsystem implementation for report_tuteur.
  *
- * @package   report_tuteur
- * @copyright 2016 Pole de Ressource Numerique, Universite du Mans
+ * @package    report_tuteur
+ * @copyright  2019 Le Mans University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+namespace report_tuteur\privacy;
 
-$capabilities = array(
-    'report/tuteur:view' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ),
+defined('MOODLE_INTERNAL') || die();
 
-        'clonepermissionsfrom' => 'coursereport/tuteur:view',
-    )
-);
-
+/**
+ * The report_tuteur plugin does not store any data.
+ *
+ * @package    report_tuteur
+ * @copyright  2019 Le Mans University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class provider implements \core_privacy\local\metadata\null_provider {
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
+    }
+}

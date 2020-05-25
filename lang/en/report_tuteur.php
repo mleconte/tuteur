@@ -38,13 +38,13 @@ $string['page-report-tuteur-index'] = 'Activity tuteur report';
 $string['page-report-tuteur-user'] = 'User activity completion report';
 $string['selecteur'] = 'Selector';
 $string['selecteur_help'] = 'You can choose activity you want supervise<br/>
-		
-* Check activity 
+
+* Check activity
 * Then clic on filter button
 
 <H2>Rules for color</h2>
 <p>Assign</p>
-* orange : assign submit but not yet grade or feedback 
+* orange : assign submit but not yet grade or feedback
 * green : the last assign was grade or feedback
 <p>Quiz</p>
 * orange : the last attempt has no feedback
@@ -57,11 +57,12 @@ $string['selecteur_help'] = 'You can choose activity you want supervise<br/>
 * green : all compositions have a feedback.
 
 So orange when tutor action is require.
-		';
+';
 $string['eye_help'] = 'hide/show a section';
 $string['eye'] = 'hide/show';
 $string['student-report'] = 'Student report';
 $string['filter'] = 'Filter';
 $string['symbol'] = 'Symbol';
-$string['zero-activity']='They are no activity under supervision';
-$string['no-more-activity']='No more activity after filter';
+$string['zero-activity'] = 'They are no activity under supervision';
+$string['no-more-activity'] = 'No more activity after filter';
+$string['privacy:metadata'] = 'The plugin Tuteur does not store any personal data.';

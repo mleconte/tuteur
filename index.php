@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Help tutor's action by colorizing new student's response.
@@ -40,17 +40,17 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once (dirname ( __FILE__ ) . '/../../config.php');
-require_once (dirname ( __FILE__ ) . '/tuteurlib.php');
-require_once ($CFG->libdir . '/completionlib.php');
-require_once ('coursegroup.php');
+require_once(dirname ( __FILE__ ) . '/../../config.php');
+require_once(dirname ( __FILE__ ) . '/tuteurlib.php');
+require_once($CFG->libdir . '/completionlib.php');
+require_once('coursegroup.php');
 const REPORT_TUTEUR_NOT_SECTION = - 1;
 const REPORT_TUTEUR_SHOW_SECTION = 'show';
 const REPORT_TUTEUR_HIDE_SECTION = 'hide';
 const REPORT_TUTEUR_NOT_CHECK = '#FF9B37';
 const REPORT_TUTEUR_CHECK = '#AEFFAE';
 
-// Get course
+// Get course.
 $id = required_param ( 'course', PARAM_INT );
 $course = $DB->get_record ( 'course', array ( 'id' => $id ) );
 if (! $course) {
@@ -73,7 +73,7 @@ $reportsurl = $CFG->wwwroot . '/course/report.php?id=' . $course->id;
 $completion = new completion_info ( $course );
 $activities = $completion->get_activities ();
 
-//filter only activity we need
+// Filter only activity we need.
 $nbActivityBeforeFilter = count ( $activities );
 $activities = report_tuteur_filterActivities($activities);
 
@@ -81,23 +81,24 @@ $where = array ();
 $where_params = array ();
 
 // Get group mode
-$group = groups_get_course_group ( $course, true ); // Supposed to verify group
+$group = groups_get_course_group($course, true ); // Supposed to verify group.
 if ($group === 0 && $course->groupmode == SEPARATEGROUPS) {
     require_capability ( 'moodle/site:accessallgroups', $context );
 }
 
-// Get user match count
+// Get user match count.
 $total = $completion->get_num_tracked_users ( implode ( ' AND ', $where ), $where_params, $group );
 
-// Total user count
+// Total user count.
 $grandtotal = $completion->get_num_tracked_users ( '', array (), $group );
 
-// Get user data
+// Get user data.
 $progress = array ();
 
 if ($total) {
-    // list student order by lastname
-    $progress = $completion->get_progress_all ( implode ( ' AND ', $where ), $where_params, $group, 'u.lastname ASC', 0, 0, $context );
+    // List student order by lastname.
+    $progress = $completion->get_progress_all(implode(' AND ', $where ),
+                            $where_params, $group, 'u.lastname ASC', 0, 0, $context);
 }
 
 // Finish setting up page.
@@ -131,16 +132,16 @@ $listStudent = report_tuteur_StudentList ( $course );
 
 // Define javascript function
 print ("<script language='javascript'>\nfunction showHide(id){ \n") ;
-print ("	var tableau = document.getElementsByTagName('td');\n") ;
-print (" 	var i;\n") ;
-print (" 	for(i = 0 ;i< tableau.length; i++) {\n") ;
-print ("	  if (tableau.item(i).getAttribute('name') == id) {\n") ;
-print ("		if (tableau.item(i).style.display == 'none') {\n") ;
-print ("			tableau.item(i).style.display = 'table-cell';\n") ;
-print ("		} else { \n") ;
-print ("			tableau.item(i).style.display = 'none';\n") ;
-print ("	  }\n") ;
-print ("	} \n") ;
+print ("    var tableau = document.getElementsByTagName('td');\n") ;
+print ("    var i;\n") ;
+print ("    for(i = 0 ;i< tableau.length; i++) {\n") ;
+print ("      if (tableau.item(i).getAttribute('name') == id) {\n") ;
+print ("        if (tableau.item(i).style.display == 'none') {\n") ;
+print ("            tableau.item(i).style.display = 'table-cell';\n") ;
+print ("        } else { \n");
+print ("            tableau.item(i).style.display = 'none';\n") ;
+print ("      }\n") ;
+print ("    } \n") ;
 print ("  }\n") ;
 print ("}\n</script>\n") ;
 
@@ -154,9 +155,9 @@ if ($nbActivityBeforeFilter == 0) {
 }
 $paramGroup = optional_param ( 'chxGroupe', null, PARAM_TEXT );
 if (count ( $activities ) == 0 && $paramGroup == null) { //no activity and no filter
-	echo $OUTPUT->container ( get_string ( 'zero-activity', 'report_tuteur'), 'errorbox errorboxcontent' );
-	echo $OUTPUT->footer ();
-	exit ();
+    echo $OUTPUT->container ( get_string ( 'zero-activity', 'report_tuteur'), 'errorbox errorboxcontent' );
+    echo $OUTPUT->footer ();
+    exit ();
 }
 
 // If no users in this course what-so-ever
@@ -178,17 +179,34 @@ $handleGroup = new report_tuteur_coursegroup ( $course->id );
 print ("<FORM action='#' method='POST'>") ;
 $filter = array ();
 
+$pluginman = core_plugin_manager::instance();
+$journalinfo = $pluginman->get_plugin_info("journal");
 
 $txt_assign = get_string ( 'modulename', 'assign' );
 $txt_quiz = get_string ( 'modulename', 'quiz' );
-$txt_journal = get_string ( 'modulename', 'journal' );
+if (!is_null($journalinfo)) {
+    $txt_journal = get_string ( 'modulename', 'journal' );
+}
 $txt_lesson = get_string ( 'modulename', 'lesson' );
+
+//test dialoguegrade module present
+$dialoguegradeExist = $DB->record_exists('modules', array('name'=>'dialoguegrade'));
+if ($dialoguegradeExist) {
+    $txt_dlgrade = get_string ( 'modulename', 'dialoguegrade' );
+}
+
 if ($paramGroup == null) {
     print ("<INPUT type='checkbox' name='devoir' value='assign' checked='checked'> " . $txt_assign . "&nbsp;&nbsp;
-        <INPUT type='checkbox' name='test' value='quiz' checked='checked'> " . $txt_quiz . "&nbsp;&nbsp;
-        <INPUT type='checkbox' name='journal' value='journal' checked='checked'> " . $txt_journal . "&nbsp;&nbsp;
-        <INPUT type='checkbox' name='lesson' value='lesson' checked='checked'> " . $txt_lesson . "&nbsp;&nbsp;
+        <INPUT type='checkbox' name='test' value='quiz' checked='checked'> " . $txt_quiz . "&nbsp;&nbsp;");
+    if (!is_null($journalinfo)) {
+        print ("<INPUT type='checkbox' name='journal' value='journal' checked='checked'> " . $txt_journal . "&nbsp;&nbsp;");
+    }    
+    print ("<INPUT type='checkbox' name='lesson' value='lesson' checked='checked'> " . $txt_lesson . "&nbsp;&nbsp;");
+    if ($dialoguegradeExist) {
+        print ("<INPUT type='checkbox' name='dlgrade' value='dialoguegrade' checked='checked'> " . $txt_dlgrade . "&nbsp;&nbsp;
     ") ;
+        $filter ['dialoguegrade'] = 1;
+    }
 
     $filter ['assign'] = 1;
     $filter ['journal'] = 1;
@@ -213,12 +231,14 @@ if ($paramGroup == null) {
     }
     print (">" . $txt_quiz . "&nbsp;&nbsp;") ;
 
-    print ("<INPUT type='checkbox' name='journal' value='journal'") ;
-    if (optional_param ( 'journal', null, PARAM_TEXT ) != null) {
-        $filter ['journal'] = 1;
-        print (" checked='checked'") ;
+    if (!is_null($journalinfo)) {
+        print ("<INPUT type='checkbox' name='journal' value='journal'") ;
+        if (optional_param ( 'journal', null, PARAM_TEXT ) != null) {
+            $filter ['journal'] = 1;
+            print (" checked='checked'") ;
+        }
+        print (">" . $txt_journal . "&nbsp;&nbsp;") ;
     }
-    print (">" . $txt_journal . "&nbsp;&nbsp;") ;
 
     print ("<INPUT type='checkbox' id='lesson' name='lesson' value='lesson'") ;
     if (optional_param ( 'lesson', null, PARAM_TEXT ) != null) {
@@ -227,6 +247,15 @@ if ($paramGroup == null) {
     }
     print (">" . $txt_lesson . "&nbsp;&nbsp;") ;
 
+    if ($dialoguegradeExist) {
+        print ("<INPUT type='checkbox' name='dlgrade' value='dialoguegrade'") ;
+        if (optional_param ( 'dlgrade', null, PARAM_TEXT ) != null) {
+            $filter ['dialoguegrade'] = 1;
+            print (" checked='checked'") ;
+        }
+        print (">" . $txt_dlgrade . "&nbsp;&nbsp;") ;
+    }
+    
     if ($paramGroup != null) {
         $filter ['group'] = intval ( $paramGroup );
     }
@@ -236,14 +265,14 @@ if ($paramGroup == null) {
 print ("<INPUT TYPE='submit' NAME='btn' VALUE='" . get_string ( 'filter', 'report_tuteur' ) . "'> &nbsp;") ;
 
 print ($OUTPUT->help_icon ( "selecteur", "report_tuteur", "" )) ;
-print ("&nbsp;&nbsp;" . get_string ( 'symbol', 'report_tuteur' ) . "&nbsp;&nbsp;<img src='" . $OUTPUT->pix_url ( 'i/' . REPORT_TUTEUR_SHOW_SECTION ) . "' >") ;
+print ("&nbsp;&nbsp;" . get_string ( 'symbol', 'report_tuteur' ) . "&nbsp;&nbsp;<img src='" . $OUTPUT->image_url ( 'i/' . REPORT_TUTEUR_SHOW_SECTION, 'moodle' ) . "' >") ;
 print ($OUTPUT->help_icon ( "eye", "report_tuteur", "" )) ;
 print ("</FORM>") ;
 
 if (count ( $activities ) == 0) { //no more activity after filter
-	echo $OUTPUT->container ( get_string ( 'no-more-activity', 'report_tuteur'), 'errorbox errorboxcontent' );
-	echo $OUTPUT->footer ();
-	exit ();
+    echo $OUTPUT->container ( get_string ( 'no-more-activity', 'report_tuteur'), 'errorbox errorboxcontent' );
+    echo $OUTPUT->footer ();
+    exit ();
 }
 
 print '<div id="completion-progress-wrapper" class="no-overflow">';
@@ -257,9 +286,9 @@ print ("<td></td><td></td>") ;
 for($i = 0; $i <= $zr_activity; $i ++) {
     if (isset ( $nbActivityPerSection [$i] )) {
         print ("<td name='Section" . $i . "' style='display:none;'><a href=\"javascript:showHide('Section" . $i . "');\">") ;
-        print ("<img src='" . $OUTPUT->pix_url ( 'i/' . REPORT_TUTEUR_HIDE_SECTION ) . "' ></a></td>") ;
+        print ("<img src='" . $OUTPUT->image_url ( 'i/' . REPORT_TUTEUR_HIDE_SECTION, 'moodle' ) . "' ></a></td>") ;
         print ("<td name='Section" . $i . "' style='display:table-cell;' colspan='" . $nbActivityPerSection [$i] . "'>") ;
-        print ("<a href=\"javascript:showHide('Section" . $i . "');\">" . get_string ( 'section' ) . $i . "&nbsp;<img src='" . $OUTPUT->pix_url ( 'i/' . REPORT_TUTEUR_SHOW_SECTION ) . "' ></a></td>") ;
+        print ("<a href=\"javascript:showHide('Section" . $i . "');\">" . get_string ( 'section' ) . $i . "&nbsp;<img src='" . $OUTPUT->image_url ( 'i/' . REPORT_TUTEUR_SHOW_SECTION, 'moodle' ) . "' ></a></td>") ;
     }
 }
 print ("</tr>") ;
@@ -293,7 +322,7 @@ foreach ( $activities as $activity ) {
     $displayname = format_string ( $activity->name, true, array ('context' => $activity->context) );
 
     $shortenedname = shorten_text ( $displayname );
-    print '<td scope="col" class="' . $datepassedclass . '" name="Section' . $activity->sectionnum . '" style="display:table-cell;">' . '<a href="' . $CFG->wwwroot . '/mod/' . $activity->modname . '/view.php?id=' . $activity->id . '" title="' . s ( $displayname ) . '">' . '<img src="' . $OUTPUT->pix_url ( 'icon', $activity->modname ) . '" alt="' . s ( get_string ( 'modulename', $activity->modname ) ) . '" />' . ' <span class="completion-activityname">' . $shortenedname . '</span></a>';
+    print '<td scope="col" class="' . $datepassedclass . '" name="Section' . $activity->sectionnum . '" style="display:table-cell;">' . '<a href="' . $CFG->wwwroot . '/mod/' . $activity->modname . '/view.php?id=' . $activity->id . '" title="' . s ( $displayname ) . '">' . '<img src="' . $OUTPUT->image_url ( 'icon', $activity->modname ) . '" alt="' . s ( get_string ( 'modulename', $activity->modname ) ) . '" />' . ' <span class="completion-activityname">' . $shortenedname . '</span></a>';
     if ($activity->completionexpected) {
         print '<div class="completion-expected"><span>' . $datetext . '</span></div>';
     }
@@ -315,7 +344,7 @@ foreach ( $progress as $user ) {
     print '<tr><th scope="row"><a href="' . $CFG->wwwroot . '/user/view.php?id=' . $user->id . '&amp;course=' . $course->id . '">' . $user->lastname . ' ' . $user->firstname . '</a></th>';
 
     $reportLink = $CFG->wwwroot . '/report/outline/user.php?id=' . $user->id . '&course=' . $course->id;
-    echo '<td>&nbsp;<a href="' . $reportLink . '&mode=complete"> <img src="' . $OUTPUT->pix_url ( 'i/report' ) . '" ></a>&nbsp; /&nbsp; <a href="' . $reportLink . '&mode=outline"> <img src="' . $OUTPUT->pix_url ( 'i/news' ) . '" ></td>';
+    echo '<td>&nbsp;<a href="' . $reportLink . '&mode=complete"> <img src="' . $OUTPUT->image_url ( 'i/report', 'moodle' ) . '" ></a>&nbsp; /&nbsp; <a href="' . $reportLink . '&mode=outline"> <img src="' . $OUTPUT->image_url ( 'i/news', 'moodle' ) . '" ></td>';
 
     // completion on activity
     $zr_activity = REPORT_TUTEUR_NOT_SECTION;
@@ -369,6 +398,9 @@ foreach ( $progress as $user ) {
                     $numAttempt = report_tuteur_getNumAttemptLesson ( $user->id, $activity->id );
                     $cellLink = $CFG->wwwroot . '/mod/lesson/essay.php?id=' . $activity->id . '&mode=grade&attemptid=' . $numAttempt . '&sesskey=' . $USER->sesskey;
                 }
+                if ($activity->modname == 'dialoguegrade') {
+                	$cellLink = $CFG->wwwroot . '/mod/dialoguegrade/grade.php?id=' . $activity->id . '&itemid=-1&itemnumber=0&gradeid=-1&userid=' . $user->id;
+                }
             }
         }
 
@@ -399,9 +431,9 @@ foreach ( $progress as $user ) {
         $fulldescribe = get_string ( 'progress-title', 'completion', $a );
 
         if ($cellLink != "#") {
-            print '<td name="Section' . $activity->sectionnum . '" ' . $cellStyle . '>' . '<a href="' . $cellLink . '"><img src="' . $OUTPUT->pix_url ( 'i/' . $completionicon ) . '" alt="' . s ( $describe ) . '" title="' . s ( $fulldescribe ) . '" /></a>' . '</td>';
+            print '<td name="Section' . $activity->sectionnum . '" ' . $cellStyle . '>' . '<a href="' . $cellLink . '"><img src="' . $OUTPUT->image_url ( 'i/' . $completionicon, 'moodle' ) . '" alt="' . s ( $describe ) . '" title="' . s ( $fulldescribe ) . '" /></a>' . '</td>';
         } else {
-            print '<td name="Section' . $activity->sectionnum . '" ' . $cellStyle . '>' . '<img src="' . $OUTPUT->pix_url ( 'i/' . $completionicon ) . '" alt="' . s ( $describe ) . '" title="' . s ( $fulldescribe ) . '" />' . '</td>';
+            print '<td name="Section' . $activity->sectionnum . '" ' . $cellStyle . '>' . '<img src="' . $OUTPUT->image_url ( 'i/' . $completionicon, 'moodle' ) . '" alt="' . s ( $describe ) . '" title="' . s ( $fulldescribe ) . '" />' . '</td>';
         }
     }
 
